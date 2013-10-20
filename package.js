@@ -40,7 +40,7 @@ module.exports = {
     // An array of keywords used to describe this package to search engines,
     // mainly for people searching within the npm universe.
     "keywords": [
-        "scaffold", "seed", "template"
+        "seo", "phantomjs", "server"
     ],
     // Where is the source of truth for this code, and what type of repo is it?
     "repository": {
@@ -68,7 +68,7 @@ module.exports = {
     // If there is a file that should be loaded when require()ing this 
     // folder-as-a-package, declare this file here, relative to our package 
     // structure.
-    "main": "wash.js",
+    "main": "server/server.js",
     // Essentially, which Node.js platforms do we support? These are glob
     // like expressions supported by the 
     // [npm semantic version parser](https://npmjs.org/doc/semver.html), 
@@ -90,7 +90,9 @@ module.exports = {
     "dependencies": {
         dougs_vow: "*",
         which: "*",
-        request: "*"
+        request: "*",
+        url_washer: "*"
+        
     },
     // What dependencies are useful only for developers?
     // Installed when we `npm install` in our working directory, but not 
