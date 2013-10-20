@@ -1,0 +1,25 @@
+{
+    "name": "laundry",
+    "version": "0.1.0",
+    "author": "Michiel van Oosten",
+    "description": "Serve up a site's pages using phantomjs",
+    "repository": {
+	"type": "git",
+	"url": "git://github.com/michieljoris/laundry.git"
+    },
+    "scripts": {
+	"start": "node ./server/server.js"
+    },
+    "dependencies": {
+	"bb-server": "*",
+	"dougs_vow": "*",
+	"which" : "*",
+	"request" : "*",
+	"url_washer": "*"
+    },
+    "bugs": {
+	"url": "https://github.com/michieljoris/laundry/issues"
+    },
+    "analyze": false,
+    "preferGlobal": "true"
+}
