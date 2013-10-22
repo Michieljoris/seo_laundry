@@ -91,8 +91,10 @@ module.exports = {
         dougs_vow: "*",
         which: "*",
         request: "*",
-        url_washer: "*"
-        
+        url_washer: "*",
+        "node-schedule": "*",
+        "sitemap": "*",
+        "crawler": "*"
     },
     // What dependencies are useful only for developers?
     // Installed when we `npm install` in our working directory, but not 
@@ -105,7 +107,7 @@ module.exports = {
     // * **fs-extra**: Mixin for the fs (filesystem) module.
     // * **doccoh**: Documentation utility for this code.
     "devDependencies": {
-        "fs-extra": "0.3.x",
+        "fs-extra": "0.8.x",
         "doccoh": "0.4.1"
     },
     // Should this package be prevented from accidental publishing by npm?

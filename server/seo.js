@@ -5,8 +5,8 @@
 //TODO use site map to once per interval crawl a hardcoded site to
 //prevent dos or crawl it properly the way googlebot would, reading
 //the fragment header and spidering along
-//TODO fix up cachejs to support cancel and update
 //TODO possibly use memcache
+
 //RISKS: memory and/or disk can get full, but site would have to be big..
 
 //RISKS: requests for bogus path for legit host, phantom js gets into
@@ -36,18 +36,14 @@ var //fs = require('fs'),
     wash = require('url_washer'),
     sys = require('sys'),
     // VOW = require('dougs_vow'),
-    memory = require('cachejs').lru(options.cacheSize).cache,
-    Url = require('url')
+//TODO set expire to a higher number. Which number?
+    memory = require('cachejs').lru(options.cacheSize, 10).cache, //expires in 10 seconds
+    Url = require('url'),
+    crawl = require('./crawl'),
+    disk = require('./disk'),
+    schedule = require('node-schedule')
+
 ;
-
-function disk() {
-    
-}
-
-function crawl() {
-    
-}
-
 
 // var log = [];
 function debug() {
@@ -75,14 +71,13 @@ function sendError(req, res, error) {
     debug(sys.inspect(error));
 }
 
-function get(site, url) {
-    if (site.frequency) {
-        //this site is being crawled, and url html should be on disk
+module.exports.init = function() {
+    sites.forEach(function(site) {
         
-    }
-    else { return wash(url); }
-    
-}
+    });
+   //crawl sites and set schedules to do it again 
+    //data goes to cache dir
+};
 
 module.exports.handleGet = function(req, res) {
     var url = req.url.query.url;
@@ -98,7 +93,8 @@ module.exports.handleGet = function(req, res) {
     
     var inMemory = memory(url, function(value) {
         res.writeHead(200, {
-            'Content-Type': 'text/html'
+            'Content-Type': 'text/html',
+            'Cache-Control': 'max-age=0'
 	    // ,'last-modified': GMTdate
         });
         res.end(value.html);
@@ -110,15 +106,15 @@ module.exports.handleGet = function(req, res) {
         });
         if (!onDisk) {
             debug('url not found on disk');
-            get(site, url).when(
+            wash(url).when(
                 function(html) {
-                    memory(url,  html);
                     disk(url, html);
                 }
                 ,function(err) {
                     debug('ERROR washing url:', err);
-                    memory.cancel(url);
-                    disk.cancel(url);
+                    //cancels callbacks:
+                    memory(url);
+                    disk(url);
                     sendError(req, res, err);
                 }
             );

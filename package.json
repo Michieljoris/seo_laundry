@@ -1,44 +1,47 @@
 {
-    "name": "seo_laundry",
-    "description": "Pass in an url and get back the html cleansed of js..",
-    "version": "0.1.1",
-    "homepage": "https://github.com/michieljoris/seo_laundry",
-    "keywords": [
-        "seo",
-        "phantomjs",
-        "server"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/michieljoris/seo_laundry.git"
-    },
-    "author": {
-        "name": "Michiel van Oosten",
-        "email": "mail@axion5.net",
-        "url": "http://blog.axion5.net/"
-    },
-    "licenses": [
-        {
-            "type": "MIT",
-            "url": "http://github.com/michieljoris/seo_laundry/blob/master/LICENSE.txt"
-        }
-    ],
-    "main": "server/server.js",
-    "engines": {
-        "node": ">= 0.6.x"
-    },
-    "dependencies": {
-        "dougs_vow": "*",
-        "which": "*",
-        "request": "*",
-        "url_washer": "*"
-    },
-    "devDependencies": {
-        "fs-extra": "0.3.x",
-        "doccoh": "0.4.1"
-    },
-    "private": false,
-    "scripts": {
-        "dist": "node dist; node_modules/.bin/doccoh src/package.js"
+  "name": "seo_laundry",
+  "description": "Pass in an url and get back the html cleansed of js..",
+  "version": "0.1.1",
+  "homepage": "https://github.com/michieljoris/seo_laundry",
+  "keywords": [
+    "seo",
+    "phantomjs",
+    "server"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michieljoris/seo_laundry.git"
+  },
+  "author": {
+    "name": "Michiel van Oosten",
+    "email": "mail@axion5.net",
+    "url": "http://blog.axion5.net/"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/michieljoris/seo_laundry/blob/master/LICENSE.txt"
     }
+  ],
+  "main": "server/server.js",
+  "engines": {
+    "node": ">= 0.6.x"
+  },
+  "dependencies": {
+    "dougs_vow": "*",
+    "which": "*",
+    "request": "*",
+    "url_washer": "*",
+    "node-schedule": "*",
+    "sitemap": "*",
+    "crawler": "*"
+  },
+  "devDependencies": {
+    "fs-extra": "0.8.x",
+    "doccoh": "0.4.1"
+  },
+  "private": false,
+  "scripts": {
+    "dist": "node dist; node_modules/.bin/doccoh src/package.js"
+  }
 }
