@@ -12,7 +12,7 @@ var fs = require('fs-extra'),
 var requesters = {};
 var cacheDir = './cache/';
 //To clear out unused files..
-fs.deleteSync(cacheDir);
+// fs.deleteSync(cacheDir);
 
 function disk(key, cb) {
     var value;
