@@ -6,6 +6,7 @@
 //prevent dos or crawl it properly the way googlebot would, reading
 //the fragment header and spidering along
 //TODO possibly use memcache
+//TODO compress memory cache? Still faster then disk..
 
 //RISKS: memory and/or disk can get full, but site would have to be big..
 
@@ -14,11 +15,11 @@
 //sites every so often.
 
 var sites =  {
-    "firstdoor.axion5.net" : {
+    "http://firstdoor.axion5.net" : {
         expire: 10 //seconds befor memory cache items expire
         ,frequency: 24 * 60 * 60 //seconds in between crawls, falsy is disable
         //at least one of the following has to be true, otherwise no
-        //links will be crawled
+        //links will be crawled. If both true, duplicates will eliminated.
         ,sitemap: false  //true to use sitemap
         ,spider: false //true to follow all links found
         //some servers ever only serve one page to a site, then all
@@ -72,19 +73,17 @@ function sendError(req, res, error) {
 }
 
 module.exports.init = function() {
-    sites.forEach(function(site) {
-        
-    });
    //crawl sites and set schedules to do it again 
     //data goes to cache dir
+    crawl(sites);
 };
 
 module.exports.handleGet = function(req, res) {
     var url = req.url.query.url;
-    var host = Url.parse(url).host;
+    var parsed = Url.parse(url).host;
     var onDisk;
     
-    var site = sites[host];
+    var site = sites[parsed.protocol + '//' + parsed.host];
     
     if (!site) {
         res.end('Not just any site..');
