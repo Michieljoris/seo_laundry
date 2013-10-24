@@ -46,7 +46,10 @@ function disk(key, cb) {
     return true;
 }
 
-module.exports = disk;
+module.exports = function(someCacheDir) {
+    cacheDir = someCacheDir;
+    return disk; 
+};
 
 //test
 // fs.deleteSync('./cache');

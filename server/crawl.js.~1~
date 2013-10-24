@@ -1,0 +1,225 @@
+/*global module:false require:false process:false */
+/*jshint strict:false unused:true smarttabs:true eqeqeq:true immed: true undef:true*/
+/*jshint maxparams:7 maxcomplexity:7 maxlen:150 devel:true newcap:false*/ 
+
+//Gleaned miscellaneous from:
+//https://npmjs.org/package/simplecrawler
+//https://github.com/sylvinus/node-crawler
+//https://npmjs.org/package/crawl
+
+var Crawler = require("crawler").Crawler,
+    // util = require("util"),
+    VOW = require('dougs_vow'),
+    Url = require('url'),
+    sm = require('sitemap'),
+    request = require('request'),
+    extend = require('extend'),
+    parseString = require('xml2js').parseString,
+    wash = require('url_washer')
+;
+
+var sitemap;
+
+var options = { maxDepth: 2,
+                maxFollow: 0,
+                verbose: false,
+                silent: false,
+                //timeout for a request:
+                timeout: 100,
+                //interval before trying again:
+                retryTimeout: 100,
+                retries:1,
+                ignore: ['pdf', 'doc', 'xls', 'png', 'jpg'],
+                filter: function(url, host) {
+                    function ignore(url) {
+                        return options.ignore.some(function(e) {
+                            return url.match(new RegExp('\\.' + e + '$', 'i'));
+                        });
+                    }
+                    return url.host === host && !ignore(url);
+                },
+                cacheDir: './cache',
+                sitemap: false
+              };
+
+// var log = [];
+function debug() {
+    if (options.verbose) console.log.apply(console, arguments);
+    // log.push(arguments);
+}
+
+function fetchSitemap(url) {
+    var vow = VOW.make();
+    request(Url.resolve(url, 'sitemap.xml'), function(err, response, body) {
+        if (err || response.statusCode !== 200) vow.keep([]);
+        else {
+            parseString(body, function(err, result) {
+                if (err) {
+                    debug('no sitemap found');
+                    vow.keep([]);   
+                }
+                else {
+                    var urls = [];
+                    result.urlset.url.forEach(function(l) {
+                        urls.push(l.loc[0]);
+                    });
+                    vow.keep(urls);   
+                }
+            }); 
+        }
+    });
+    return vow.promise;
+}
+
+
+function harvest(seed, host) {
+    var vow = VOW.make();
+    
+    var kept = false;
+    
+    var c = new Crawler({
+        "maxConnections":10 
+        ,timeout: options.timeout
+        ,retryTimeout: options.retryTimeout
+        ,retries: options.retries
+        ,onDrain: function() {
+            if (!kept) {
+                kept = true;
+                vow.keep();   
+            }
+        }
+    });
+    
+    function queue(uri, depth) {
+        if (options.maxFollow && followed.length >= options.maxFollow) {
+            if (!kept) {
+                kept = true;
+                vow.keep();   
+            }
+        }
+        else {
+            if (followed(uri) || options.filter(uri, host) ||
+                depth > options.maxDepth) return;
+            
+            followed[uri] = true;
+            
+            debug('Following link ' + uri);
+            c.queue({ uri: uri,
+                      callback:function(error,result,$) { 
+                          if (!result) {
+                              debug('No result!!');
+                              return;
+                          }
+                          if (!options.silent && !options.verbose)                                
+                              process.stdout.write(".");
+                          if (kept) {
+                              debug('maxFollow reached, not parsing ' + result.uri);
+                              return;   
+                          }
+                          debug('Parsing ',  result.uri);
+                          if (result.headers['content-type'] === 'text/html' && !error && $) {
+                              var fragment = $('meta[name="fragment"][content="!"]');
+                              var url = Url.parse(result.uri);
+                              if (fragment.length || (url.hash && url.hash.indexOf('#!') === 0)) 
+                                  unclean.push(result.uri);
+                          
+                              var anchors = $("a");
+                              if (!anchors.length) debug('No links found.');
+                              
+                              anchors.each(function(index,a) { queue(a.href, depth + 1); });
+                          }
+                      }
+                    });
+            
+        }
+    }
+    
+    queue(seed, 0);
+    
+    return vow.promise;
+}
+
+function respond(vow, host) {
+    if (!options.sitemap) {
+        vow.keep(unclean);   
+        return;
+    }
+    sitemap = {
+        hostname: host,
+        urls: []};
+    Object.keys(followed).forEach(function(l) {
+        sitemap.urls.push( { url: l, changefreq: options.changefreq });
+    });
+    
+    sitemap = sm.createSitemap(sitemap).toString();
+    vow.keep(sitemap);
+}
+
+var seeds;
+var followed;
+var unclean;
+function go(someOptions, seed) {
+    var vow = VOW.make();
+    seeds = [];
+    followed = {};
+    unclean = [];
+    
+    var host = Url.parse(seed).host;
+    
+    if (!host) 
+        return vow.breek('No seed passed in.');
+    
+    fetchSitemap(seed).when(
+        function(someLinks) {
+            if (!options.sitemap) 
+                someLinks.forEach(function(l) {
+                    seeds.push(l);
+                });
+            if (seed) seeds.push(seed);
+            function recur() {
+                if (seeds.length) {
+                    harvest(seeds.pop(), host).when(
+                        recur
+                    );
+                }
+                else respond(vow, host);
+            }
+            
+            recur();
+        }
+    );
+    return vow.promise;
+}
+
+module.exports =  function(someOptions) {
+    options = extend(options, someOptions);
+    return go;
+};
+
+
+wash(url).when(
+    function(html) {
+        fs.outputJsonSync(options.cacheDir + md5(url), { val: html } );
+    }
+)
+
+
+//test:
+// var url = Url.parse("http://localhost:8080");
+// // // var url = Url.parse("http://localhost:6001");
+// var host = url.host;
+// var filter = function(url) {
+//     // return true;
+//     return url.host === host && !url.path.match(/\.pdf$/i);
+//     // return url.host === host && url.hash && url.hash.indexOf('#!') === 0;
+// }
+
+// harvest({ seed: url.href, maxDepth: 2, maxFollow: 0, filter: filter, verbose: false, silent: false} )
+// .when(
+//     function(links) {
+//         console.log(links);
+//         console.log('Done');
+//     }
+// );
+
+

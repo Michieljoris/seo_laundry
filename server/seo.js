@@ -15,36 +15,35 @@
 //sites every so often.
 
 var sites =  {
-    "http://firstdoor.axion5.net" : {
-        expire: 10 //seconds befor memory cache items expire
-        ,frequency: 24 * 60 * 60 //seconds in between crawls, falsy is disable
-        //at least one of the following has to be true, otherwise no
-        //links will be crawled. If both true, duplicates will eliminated.
-        ,sitemap: false  //true to use sitemap
-        ,spider: false //true to follow all links found
-        //some servers ever only serve one page to a site, then all
-        //paths are js dependent, so set following false
-        ,hashbang: false //true to follow only hashbang paths
-    }
+    "http://firstdoor.axion5.net" : 1 //days between crawls, 0 is don't schedule crawls
 };
 
 var options = {
     verbose: true,
-    cacheSize: 10
+    cacheSize: 10,
+    //TODO set expire to a higher number. Which number?
+    expire: 10, //time before memory cache items expire
+    onDemand: true,
+    cacheDir: './cache',
+    crawl: {
+        schedule: true,
+        start: 3, //hour of the day
+        now: true
+    }
 };
 
 var //fs = require('fs'),
     wash = require('url_washer'),
     sys = require('sys'),
     // VOW = require('dougs_vow'),
-//TODO set expire to a higher number. Which number?
-    memory = require('cachejs').lru(options.cacheSize, 10).cache, //expires in 10 seconds
+    memory = require('cachejs').lru(options.cacheSize, options.expire), 
     Url = require('url'),
-    crawl = require('./crawl'),
-    disk = require('./disk'),
-    schedule = require('node-schedule')
+    crawl = require('./crawl')({ cacheDir: options.cacheDir }),
+    disk = require('./disk')(options.cacheDir)
 
 ;
+
+require('date-utils');
 
 // var log = [];
 function debug() {
@@ -72,12 +71,6 @@ function sendError(req, res, error) {
     debug(sys.inspect(error));
 }
 
-module.exports.init = function() {
-   //crawl sites and set schedules to do it again 
-    //data goes to cache dir
-    crawl(sites);
-};
-
 module.exports.handleGet = function(req, res) {
     var url = req.url.query.url;
     var parsed = Url.parse(url).host;
@@ -100,24 +93,81 @@ module.exports.handleGet = function(req, res) {
     }); 
     
     if (!inMemory)  {
+        debug('url not found in memory');
         onDisk = disk(url, function(html) {
             memory(url, html);
         });
         if (!onDisk) {
             debug('url not found on disk');
-            wash(url).when(
-                function(html) {
-                    disk(url, html);
-                }
-                ,function(err) {
-                    debug('ERROR washing url:', err);
-                    //cancels callbacks:
-                    memory(url);
-                    disk(url);
-                    sendError(req, res, err);
-                }
-            );
+            if (options.onDemand)
+                wash(url).when(
+                    function(html) {
+                        disk(url, html);
+                    }
+                    ,function(err) {
+                        debug('ERROR washing url:', err);
+                        //cancels callbacks:
+                        memory(url);
+                        disk(url);
+                        sendError(req, res, err);
+                    }
+                );
+            else {
+                memory(url);
+                disk(url);
+                sendError(req, res, 'Url not cached: ' + url);   
+            }
             
         }
     }
 };
+
+var daysSince = 0;
+function crawlSites() {
+    var list = [];
+    Object.keys(sites).forEach(function(site) {
+        list.push(site);
+    });
+    function recur() {
+        if (list) {
+            debug('Crawling ' + list[list.length-1]);
+            var site = list.pop();
+            if (sites[site] && daysSince%sites[site] === 0)
+                crawl(site).when(
+                    function() {
+                        debug('Done crawling ' + list[list.length-1]);
+                        recur(); 
+                    });
+            else recur();
+        }
+        else {
+            daysSince ++;
+            debug('Done crawling sites');   
+        }
+    }
+    recur(); 
+}
+
+
+//crawl sites and set schedules to do it again 
+//data goes to cache dir
+var nsites = Object.keys(sites).length;
+if (nsites && options.crawl && options.crawl.schedule) {
+    var wait = Date.tomorrow().addHours(options.crawl.start || 3) - Date.now();
+    setTimeout(function() {
+        crawlSites();
+        setInterval(crawlSites, 24 * 60 * 60 * 1000);
+    }, wait);
+}
+
+if (options.crawl.now) crawlSites();
+
+// module.exports.init();
+
+// console.log(new Date(new Date().getTime() + 6000000));
+// var tomorrow = Date.tomorrow().addHours(options.workhours.start).getTime();
+// console.log((tomorrow - Date.now())/3600000);
+// var interval = ((options.workhours.end - options.workhours.start)/Object.keys(sites).length) * 60 * 60 * 1000;
+// console.log(interval);
+// console.log(Date.tomorrow().addMilliseconds(interval));
+

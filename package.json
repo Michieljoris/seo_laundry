@@ -34,7 +34,9 @@
     "url_washer": "*",
     "node-schedule": "*",
     "sitemap": "*",
-    "crawler": "*"
+    "crawler": "*",
+    "extend": "*",
+    "date-utils": "*"
   },
   "devDependencies": {
     "fs-extra": "0.8.x",

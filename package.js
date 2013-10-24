@@ -94,7 +94,9 @@ module.exports = {
         url_washer: "*",
         "node-schedule": "*",
         "sitemap": "*",
-        "crawler": "*"
+        "crawler": "*",
+        "extend": "*",
+        "date-utils": "*"
     },
     // What dependencies are useful only for developers?
     // Installed when we `npm install` in our working directory, but not 
