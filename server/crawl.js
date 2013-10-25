@@ -7,7 +7,10 @@
 //https://github.com/sylvinus/node-crawler
 //https://npmjs.org/package/crawl
 
-var Crawler = require("crawler").Crawler,
+//Using cheerio:
+// https://github.com/cbright/node-crawler
+
+var Crawler = require("./node-crawler").Crawler,
     VOW = require('dougs_vow'),
     Url = require('url'),
     sm = require('sitemap'),
@@ -16,263 +19,248 @@ var Crawler = require("crawler").Crawler,
     parseString = require('xml2js').parseString,
     wash = require('url_washer'),
     fs = require('fs-extra'),
-    md5 = require('MD5')
+    md5 = require('MD5'),
+    Path = require('path')
 // util = require("util"),
 ;
 
+//Modified crawler.js module, line 384: 
+// //Static HTML was given, skip request
+// if (toQueue.html) {
+//     if (typeof toQueue.html==="function") {
+//         toQueue.html(toQueue.uri, function(html) {
+//             if (html)
+//                 self.onContent(null,toQueue,{body:html},false);
+//             else self.onContent('No html received',toQueue,null,false);
+//         });
+//     } 
+//     else self.onContent(null,toQueue,{body:toQueue.html},false);
+//     return;
+// }
+
 //TODO update dougs_vow repo with my vow.status edit
 //TODO update wash.js in repo
-//TODO this is only save when called when it's not busy because of the module wide vars.
 
-var followed;
-var dynamic;
-var host;
-var busy;
 
-var options = { maxDepth: 1,
+var defaultOptions = { maxDepth: 1,
                 maxFollow: 0,
-                verbose: true,
+                verbose: false,
                 silent: false,
                 //timeout for a request:
-                timeout: 100,
+                timeout: 60000,
                 //interval before trying again:
-                retryTimeout: 100,
-                retries:1,
+                retryTimeout: 10000,
+                retries:3,
                 ignore: ['pdf', 'doc', 'xls', 'png', 'jpg', 'png','js', 'css' ],
-                filter: function(url, host) {
-                    var parsed = Url.parse(url);
-                    function ignore(url) {
-                        return options.ignore.some(function(e) {
-                            return url.match(new RegExp('\\.' + e + '$', 'i'));
-            
-                        });
-                    }
-                    return parsed.host !== host || ignore(url);
-                },
                 cacheDir: './cache',
                 sitemap: false
               };
 
-// var log = [];
-function debug() {
-    if (options.verbose) console.log.apply(console, arguments);
-    // log.push(arguments);
-}
+function getCrawler(options) {
+    
+    var followed;
+    var dynamic;
+    var host;
+    
+    // var log = [];
+    function debug() {
+        if (options.verbose) console.log.apply(console, arguments);
+        // log.push(arguments);
+    }
+    
+    function filter(url) {
+        var parsed = Url.parse(url);
+        function ignore(url) {
+            return options.ignore.some(function(e) {
+                return url.match(new RegExp('\\.' + e + '$', 'i'));
+            
+            });
+        }
+        return parsed.host !== host || ignore(url);
+    }
 
-function fetchSitemap(url) {
-    var vow = VOW.make();
-    request(Url.resolve(url, 'sitemap.xml'), function(err, response, body) {
-        if (err || response.statusCode !== 200) vow.keep([]);
-        else {
-            parseString(body, function(err, result) {
-                if (err) {
-                    debug('no sitemap found');
-                    vow.keep([]);   
-                }
-                else {
-                    var urls = [];
+    function fetchSitemap(url) {
+        var vow = VOW.make();
+        request(Url.resolve(url, 'sitemap.xml'), function(err, response, body) {
+            if (err || response.statusCode !== 200) vow.keep([]);
+            else {
+                parseString(body, function(err, result) {
+                    if (err) {
+                        debug('no sitemap found');
+                        vow.keep([]);   
+                    }
+                    else {
+                        var urls = [];
                         result.urlset.url.forEach(function(l) {
                             urls.push(l.loc[0]);
                         });
-                    vow.keep(urls);   
-                }
-            }); 
-        }
-    });
-    return vow.promise;
-}
-
-function process(vow, seed) {
-    
-    function fetch(method, uri, depth) {
-        if (options.maxFollow && followed.length >= options.maxFollow) {
-            if (vow.status === 'pending') vow.keep();
-        }
-        else {
-            if (followed[uri] || options.filter(uri, host) ||
-                depth > options.maxDepth) return;
-        
-            followed[uri] = true;
-            debug('Following link ' + uri + ' with ' + method);
-            //QUEUE
-            queue[method](
-                uri, function(error, result, $) {
-                    if (options.maxFollow && followed.length >= options.maxFollow) 
-                        debug('maxFollow reached, not parsing ' + result.uri);
-                    else parse(error, result, $, depth);
-                });
-        }
-    }
-
-    function parse(error, result, $, depth) { 
-        if (result) {
-            if (!options.silent && !options.verbose)                                
-                parse.stdout.write(".");
-            if (result.headers['content-type'] === 'text/html' && !error && $) {
-                debug('Parsing ',  result.uri);
-                if ($('meta[name="fragment"][content="!"]').length)
-                    fetch('phantom', result.uri, depth); //fetch again
-                else { var anchors = $("a");
-                       if (!anchors.length) debug('No links found.');
-        
-                       anchors.each(function(index,a) {
-                               var url = Url.parse(a.href);
-                               var method = url.hash && url.hash.indexOf('#!') === 0 ? 
-                               'phantom' :'crawl';
-                           fetch(method, a.href, depth + 1);
-                       });
-                     }
+                        vow.keep(urls);   
+                    }
+                }); 
             }
-        }
-        else  debug('Nothing to parse');
+        });
+        return vow.promise;
     }
-    fetch('crawl', seed, 0);
-}
 
-var queue;
+    function printDot() {
+        if (!options.silent && !options.verbose)                                
+            process.stdout.write(".");
+    }
 
-function harvest(seed) {
-    var vow = VOW.make();
-    
-    var c = new Crawler({
-        "maxConnections":10 
-        ,timeout: options.timeout
-        ,retryTimeout: options.retryTimeout
-        ,retries: options.retries
-        ,onDrain: function() {
-            if (vow.status === 'pending') vow.keep();
+    function extractLinks(result,$) {
+        debug('Parsing ',  result.uri);
+        var links = [];
+        if (result.body.links) {
+            links = result.body.links;
+        } 
+        else if (result.headers && result.headers['content-type'] === 'text/html' && $) {
+            $("a").each(function(index,a) {
+                links.push(a.href);
+            });
         }
-    });
-    
-    queue = {
-        crawl: function(url, cb) {
-            c.queue({ uri: url, callback: cb });
+        return links;
+    } 
+
+    function maxFollowed(vow) {
+        if (options.maxFollow && followed.length >= options.maxFollow) {
+            debug('maxFollow reached');
+            if (vow.status() === 'pending') vow.keep();
+            return true;
         }
-        ,phantom: function(url, cb) {
-            //TODO implement queue for phantom 
-            dynamic.push(url);
-            wash(options.url).when(
-                function(html) {
-                    fs.outputJsonSync(options.cacheDir + md5(url), { val: html } );
-                    cb(null, html, 'jquery!!!!!!');
+        return false;
+    } 
+
+    function validUri(uri) {
+        return !followed[uri] && !filter(uri, host) ;
+    }
+
+    function getHtml(url, cb) {
+        console.log('washing ' + url);
+        wash(url).when(
+            function(result) { //html, headers and links
+                fs.outputJsonSync(Path.resolve(options.cacheDir, md5(url)), { val: result.html } );
+                cb(result);
+            }
+            ,function(err) {
+                debug('ERROR washing url:', err);
+                cb();
+            }
+        );
+    }
+
+    function harvest(seed) {
+        var vow = VOW.make();
+    
+        var c = new Crawler({
+            "maxConnections":10 
+            ,timeout: options.timeout
+            ,retryTimeout: options.retryTimeout
+            ,retries: options.retries
+            ,callback: function(error, result, $) {
+                debug('in callback \n', error, result ? result.body: '');
+                if (error || !result) return;
+                if ($ && $('meta[name="fragment"][content="!"]').length) {
+                    fetch('phantom', result.uri, result.options.depth); //fetch again
+                    return;
                 }
-                ,function(err) {
-                    debug('ERROR washing url:', err);
-                    cb('Error washing url');
-                    //cancels callbacks:
-                }
-            );
-            
-        }
-    };
-    process(vow, seed);
-    
-    return vow.promise;
-}
-
-function respond(vow, host) {
-    if (!options.sitemap) 
-        vow.keep(dynamic);   
-    else {
-        var sitemap = {
-            hostname: host,
-            urls: []};
-        Object.keys(followed).forEach(function(l) {
-            sitemap.urls.push( { url: l, changefreq: options.changefreq });
+                if (maxFollowed(vow)) return;
+                var links = extractLinks(result, $);
+                links.forEach(function(link) {
+                    debug('link', link);
+                    var url = Url.parse(link);
+                    var method = url.hash && url.hash.indexOf('#!') === 0 ? 
+                        'phantom' :'crawl';
+                    fetch(method, link, result.options.depth + 1);
+                });
+            }
+            ,onDrain: function() {
+                if (vow.status() === 'pending') vow.keep(followed);
+            }
         });
     
-        sitemap = sm.createSitemap(sitemap).toString();
-        vow.keep(sitemap);
-    } 
-    busy = false;
-}
-
-function go(seed) {
-    if (busy) {
-        throw "crawl: Still busy I am!!!!"
-    }
-    busy = true;
-    
-    var vow = VOW.make();
-    var seeds = [];
-    followed = {};
-    dynamic = [];
-    
-    host = Url.parse(seed).host;
-    
-    if (!host) 
-        return vow.breek('No seed passed in.');
-    
-    fetchSitemap(seed).when(
-        function(someLinks) {
-            if (!options.sitemap) 
-                someLinks.forEach(function(l) {
-                    seeds.push(l);
-                });
-            if (seed) seeds.push(seed);
-            function recur() {
-                if (seeds.length) {
-                    harvest(seeds.pop(), host).when(
-                        recur
-                    );
+        function fetch(method, uri, depth) {
+            printDot();
+            if (maxFollowed(vow)) return;
+            if (validUri(uri) &&  depth <= options.maxDepth) {
+                debug('Following link ' + uri + ' with ' + method);
+                followed[uri] = true;
+                if (method === 'crawl')
+                    c.queue({ uri: uri, depth: depth});
+                else {
+                    dynamic.push(uri);
+                    c.queue({ uri: uri, html: getHtml, jQuery: false, depth: depth });
                 }
-                else respond(vow, host);
             }
-            
-            recur();
         }
-    );
-    return vow.promise;
+
+        fetch('crawl', seed, 0);
+        return vow.promise;
+    }
+
+    function respond(vow) {
+        debug('followed:', followed);
+        if (!options.sitemap) 
+            vow.keep({ followed: Object.keys(followed), phantomed: dynamic });   
+        else {
+            var sitemap = {
+                hostname: host,
+                urls: []};
+            Object.keys(followed).forEach(function(l) {
+                sitemap.urls.push( { url: l, changefreq: options.changefreq });
+            });
+    
+            sitemap = sm.createSitemap(sitemap).toString();
+            vow.keep(sitemap);
+        } 
+    }
+
+    function go(seed) {
+        var vow = VOW.make();
+        var seeds = [];
+        followed = {};
+        dynamic = [];
+        debug(options);
+        host = Url.parse(seed || '').host;
+        if (!host) vow.breek('No seed passed in.');
+        else {
+            fetchSitemap(seed).when(
+                function(someLinks) {
+                    if (!options.sitemap) 
+                        someLinks.forEach(function(l) {
+                            seeds.push(l);
+                        });
+                    if (seed) seeds.push(seed);
+                    function recur() {
+                        if (seeds.length) {
+                            harvest(seeds.pop()).when(
+                                recur
+                            );
+                        }
+                        else respond(vow, host);
+                    }
+            
+                    recur();
+                }
+            );
+        }
+        return vow.promise;
+    }
+    return go; 
 }
 
 module.exports =  function(someOptions) {
-    options = extend(options, someOptions);
-    return go;
+    var options = extend(extend({}, defaultOptions), someOptions);
+    return getCrawler(options);
 };
 
-// go('http://localhost:8080').when(
+//Test
+// var c = module.exports({ verbose: false })
+// c('http://localhost:6001').when(
+// // c('http://firstdoor.axion5.net').when(
 //     function(data) {
-//         console.log(data);
+//         console.log('RESULT:\n', data);
 //     }
 //     ,function(err) {
 //         console.log('ERROR', err);
 //     }
-// );
-
-
-
-
-//test:
-// var url = Url.parse("http://localhost:8080");
-// // // var url = Url.parse("http://localhost:6001");
-// var host = url.host;
-// var filter = function(url) {
-//     // return true;
-//     return url.host === host && !url.path.match(/\.pdf$/i);
-//     // return url.host === host && url.hash && url.hash.indexOf('#!') === 0;
-// }
-
-// harvest({ seed: url.href, maxDepth: 2, maxFollow: 0, filter: filter, verbose: false, silent: false} )
-// .when(
-//     function(links) {
-//         console.log(links);
-//         console.log('Done');
-//     }
-// );
-
-// function ignore(url, host) {
-//     var parsed = Url.parse(url);
-//     function ignore(url) {
-//         return options.ignore.some(function(e) {
-//             return url.match(new RegExp('\\.' + e + '$', 'i'));
-            
-//         });
-//     }
-//     return parsed.host !== host || ignore(url);
-// }
-// var r = ignore('http://localhost:8080/bla.do', 'localhost:8080')
-// console.log(r);
-
-// var url = 'http://localhost:8080/bla.jpg';
-// var m = url.match(new RegExp('\\.' + 'xpg' + '$', 'i'));
-// console.log(m);
+// )

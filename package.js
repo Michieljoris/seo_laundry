@@ -90,13 +90,19 @@ module.exports = {
     "dependencies": {
         dougs_vow: "*",
         which: "*",
-        request: "*",
+        "request": "2.21.0",
         url_washer: "*",
         "node-schedule": "*",
         "sitemap": "*",
-        "crawler": "*",
         "extend": "*",
-        "date-utils": "*"
+        "date-utils": "*",
+        "underscore": "1.4.4",
+        "jschardet": "1.0.2",
+        "jsdom": "0.8.2",
+        "generic-pool": "2.0.3",
+        "htmlparser": "1.7.6",
+        "iconv-lite": "0.2.8",
+        "iconv": "2.0.6"
     },
     // What dependencies are useful only for developers?
     // Installed when we `npm install` in our working directory, but not 
