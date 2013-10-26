@@ -1,4 +1,4 @@
-/*global module:false require:false process:false */
+/*global module:false require:false process:false __dirname:false*/
 /*jshint strict:false unused:true smarttabs:true eqeqeq:true immed: true undef:true*/
 /*jshint maxparams:7 maxcomplexity:7 maxlen:150 devel:true newcap:false*/ 
 
@@ -138,7 +138,7 @@ function getCrawler(options) {
         console.log('washing ' + url);
         wash(url).when(
             function(result) { //html, headers and links
-                fs.outputJsonSync(Path.resolve(options.cacheDir, md5(url)), { val: result.html } );
+                fs.outputJsonSync(Path.resolve(__dirname, options.cacheDir, md5(url)), { val: result.html } );
                 cb(result);
             }
             ,function(err) {

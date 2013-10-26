@@ -1,0 +1,117 @@
+;; -*- mode: emacs-lisp; coding: emacs-mule; -*-
+;; --------------------------------------------------------------------------
+;; Desktop File for Emacs
+;; --------------------------------------------------------------------------
+;; Created Fri Oct 25 20:10:20 2013
+;; Desktop file format version 206
+;; Emacs version 24.2.1
+
+;; Global section:
+(setq desktop-missing-file-warning nil)
+(setq tags-file-name nil)
+(setq tags-table-list nil)
+(setq search-ring '("dfdasi"))
+(setq regexp-search-ring '("\\_<cacheDir\\_>" "Body length" "console" "\\_<getHtml\\_>" "queryrul" "\\_<extractLinks\\_>" "match" "\\_<validUri\\_>" "\\_<filter\\_>" "match" "jquery" "filter" "\\_<maxFollowed\\_>" "\\_<printDot\\_>" "exception" "catch"))
+(setq register-alist (list '(101 file . "~/emacs/init.el") '(98 file . "~/.bashrc") '(107 file . "~/.emacs.d/my-config/keys.el") (desktop-list* 105 (let ((mk (make-marker))) (add-hook 'desktop-delay-hook (list 'lambda '() (list 'set-marker mk nil (get-buffer " *temp*")))) mk))))
+(setq file-name-history '("~/www/sites/seo_laundry/" "/home/michieljoris/www/sites/seo_laundry/.gitignore" "/home/michieljoris/www/sites/seo_laundry/node_modules/url_washer/wash.js" "/home/michieljoris/www/sites/seo_laundry/server/node-crawler.js" "/home/michieljoris/mysrc/javascript/roster/app/_attachments/lib/vow.js" "/home/michieljoris/www/sites/seo_laundry/node_modules/dougs_vow/vow.js" "/home/michieljoris/www/sites/seo_laundry/node_modules/crawler/package.json" "/home/michieljoris/www/sites/seo_laundry/package.js" "/home/michieljoris/www/sites/seo_laundry/server/node-crawler.js" "/home/michieljoris/www/sites/seo_laundry/node_modules/crawler/lib/crawler.js" "/home/michieljoris/www/sites/seo_laundry/package.js" "/home/michieljoris/mysrc/javascript/node-crawler/.gitignore" "/home/michieljoris/temp/crawler/node-crawlerorig/package.json" "/home/michieljoris/mysrc/javascript/node-crawler/package.json" "/home/michieljoris/mysrc/javascript/node-crawler/lib/crawler.js" "/home/michieljoris/temp/crawler/node-crawlerorig/lib/crawler.js" "/home/michieljoris/mysrc/javascript/node-crawler/lib/crawler.js" "/home/michieljoris/mysrc/javascript/node-crawler/LICENSE.txt" "/home/michieljoris/temp/crawler/node-crawlerorig/lib/crawler.js" "/home/michieljoris/temp/crawler/node-crawlerorig/test/units/simple.js" "/home/michieljoris/mysrc/javascript/node-crawler/test/units/simple.js" "/home/michieljoris/temp/crawler/node-crawler/test/units/simple.js" "/home/michieljoris/temp/crawler/node-crawler/lib/crawler.js" "/home/michieljoris/temp/crawler/node-crawler/test/testrunner.js" "/home/michieljoris/mysrc/javascript/node-crawler/README.md" "/home/michieljoris/mysrc/javascript/node-crawler/package.json" "/home/michieljoris/mysrc/javascript/node-crawler/test/testrunner.js" "/home/michieljoris/mysrc/javascript/node-crawler/test/mockserver.js" "/home/michieljoris/mysrc/javascript/node-crawler/test/units/simple.js" "/home/michieljoris/mysrc/javascript/node-crawler/test/testrunner.js"))
+
+;; Buffer section -- buffers listed in same order as in buffer list:
+(desktop-create-buffer 206
+  "/home/michieljoris/www/sites/seo_laundry/node_modules/url_washer/wash.js"
+  "wash.js"
+  'js2-mode
+  '(undo-tree-mode flymake-mode moz-minor-mode yas-minor-mode auto-complete-mode window-number-mode autopair-mode projman-mode global-auto-revert-mode tern-mode hs-minor-mode)
+  4899
+  '(3952 nil)
+  nil
+  nil
+  '((indent-tabs-mode) (buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/michieljoris/www/sites/seo_laundry/server/crawl.js"
+  "crawl.js"
+  'js2-mode
+  '(undo-tree-mode flymake-mode moz-minor-mode yas-minor-mode auto-complete-mode window-number-mode autopair-mode projman-mode global-auto-revert-mode tern-mode hs-minor-mode)
+  4311
+  '(8227 nil)
+  nil
+  nil
+  '((indent-tabs-mode) (buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/michieljoris/www/sites/seo_laundry/server/node-crawler.js"
+  "node-crawler.js"
+  'js2-mode
+  '(undo-tree-mode flymake-mode moz-minor-mode yas-minor-mode auto-complete-mode window-number-mode autopair-mode projman-mode global-auto-revert-mode tern-mode hs-minor-mode)
+  884
+  '(884 nil)
+  nil
+  nil
+  '((indent-tabs-mode) (buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/michieljoris/www/sites/seo_laundry/node_modules/dougs_vow/vow.js"
+  "vow.js"
+  'js2-mode
+  '(undo-tree-mode flymake-mode moz-minor-mode yas-minor-mode auto-complete-mode window-number-mode autopair-mode projman-mode global-auto-revert-mode tern-mode hs-minor-mode)
+  2670
+  '(3684 nil)
+  nil
+  nil
+  '((indent-tabs-mode) (buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/michieljoris/mysrc/javascript/roster/app/_attachments/lib/vow.js"
+  "vow.js"
+  'js2-mode
+  '(undo-tree-mode flymake-mode moz-minor-mode yas-minor-mode auto-complete-mode window-number-mode autopair-mode projman-mode global-auto-revert-mode tern-mode hs-minor-mode)
+  1897
+  '(1386 nil)
+  nil
+  nil
+  '((indent-tabs-mode) (buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/michieljoris/www/sites/seo_laundry/package.js"
+  "package.js"
+  'js2-mode
+  '(undo-tree-mode flymake-mode moz-minor-mode yas-minor-mode auto-complete-mode window-number-mode autopair-mode projman-mode global-auto-revert-mode tern-mode hs-minor-mode)
+  4572
+  '(4749 nil)
+  nil
+  nil
+  '((indent-tabs-mode) (buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/michieljoris/www/sites/seo_laundry/node_modules/crawler/package.json"
+  "package.json"
+  'js-mode
+  '(undo-tree-mode yas-minor-mode auto-complete-mode window-number-mode autopair-mode projman-mode global-auto-revert-mode)
+  5894
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/michieljoris/www/sites/seo_laundry/node_modules/crawler/LICENSE.txt"
+  "LICENSE.txt"
+  'text-mode
+  '(auto-fill-mode undo-tree-mode yas-minor-mode window-number-mode autopair-mode projman-mode global-auto-revert-mode)
+  1
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+
+(desktop-create-buffer 206
+  "/home/michieljoris/www/sites/seo_laundry/serve"
+  "serve"
+  'fundamental-mode
+  '(window-number-mode projman-mode global-auto-revert-mode)
+  1
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . undecided-unix)))
+

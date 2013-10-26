@@ -102,7 +102,8 @@ module.exports = {
         "generic-pool": "2.0.3",
         "htmlparser": "1.7.6",
         "iconv-lite": "0.2.8",
-        "iconv": "2.0.6"
+        "iconv": "2.0.6",
+        "cachejs": "*"
     },
     // What dependencies are useful only for developers?
     // Installed when we `npm install` in our working directory, but not 

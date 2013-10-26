@@ -42,7 +42,8 @@
     "generic-pool": "2.0.3",
     "htmlparser": "1.7.6",
     "iconv-lite": "0.2.8",
-    "iconv": "2.0.6"
+    "iconv": "2.0.6",
+    "cachejs": "*"
   },
   "devDependencies": {
     "fs-extra": "0.8.x",

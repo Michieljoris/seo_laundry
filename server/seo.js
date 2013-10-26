@@ -2,11 +2,11 @@
 /*jshint strict:false unused:true smarttabs:true eqeqeq:true immed: true undef:true*/
 /*jshint maxparams:7 maxcomplexity:7 maxlen:150 devel:true newcap:false*/ 
 
-//TODO use site map to once per interval crawl a hardcoded site to
-//prevent dos or crawl it properly the way googlebot would, reading
-//the fragment header and spidering along
 //TODO possibly use memcache
 //TODO compress memory cache? Still faster then disk..
+//TODO compress disk cache? 
+//TODO Serve gzipped
+//TODO Edit Readme
 
 //RISKS: memory and/or disk can get full, but site would have to be big..
 
@@ -14,8 +14,10 @@
 //gear every time, slows computer down. Better is to crawl whitelisted
 //sites every so often.
 
+
 var sites =  {
-    "http://firstdoor.axion5.net" : 1 //days between crawls, 0 is don't schedule crawls
+    // "http://firstdoor.axion5.net" : 1 //days between crawls, 0 is don't schedule crawls
+    "http://localhost:6001" : 1 //days between crawls, 0 is don't schedule crawls
 };
 
 var options = {
@@ -28,7 +30,7 @@ var options = {
     crawl: {
         schedule: true,
         start: 3, //hour of the day
-        now: true
+        now: false
     }
 };
 
@@ -36,13 +38,13 @@ var //fs = require('fs'),
     wash = require('url_washer'),
     sys = require('sys'),
     // VOW = require('dougs_vow'),
-    memory = require('cachejs').lru(options.cacheSize, options.expire), 
+    memory = require('cachejs').lru(options.cacheSize, options.expire).cache,
     Url = require('url'),
     crawl = require('./crawl')({ cacheDir: options.cacheDir }),
     disk = require('./disk')(options.cacheDir)
 
 ;
-
+console.log(memory);
 require('date-utils');
 
 // var log = [];
@@ -73,17 +75,17 @@ function sendError(req, res, error) {
 
 module.exports.handleGet = function(req, res) {
     var url = req.url.query.url;
-    var parsed = Url.parse(url).host;
+    var parsed = Url.parse(url || '');
+    if (!parsed) return res.end('Please pass in an url..');
     var onDisk;
-    
     var site = sites[parsed.protocol + '//' + parsed.host];
-    
     if (!site) {
         res.end('Not just any site..');
         return;
     }
     
     var inMemory = memory(url, function(value) {
+        debug('url found in memory');
         res.writeHead(200, {
             'Content-Type': 'text/html',
             'Cache-Control': 'max-age=0'
@@ -95,11 +97,13 @@ module.exports.handleGet = function(req, res) {
     if (!inMemory)  {
         debug('url not found in memory');
         onDisk = disk(url, function(html) {
+            debug('url found on disk');
             memory(url, html);
         });
         if (!onDisk) {
             debug('url not found on disk');
-            if (options.onDemand)
+            if (options.onDemand) {
+                debug('about to wash url', url)
                 wash(url).when(
                     function(html) {
                         disk(url, html);
@@ -112,6 +116,7 @@ module.exports.handleGet = function(req, res) {
                         sendError(req, res, err);
                     }
                 );
+            }
             else {
                 memory(url);
                 disk(url);
@@ -129,13 +134,13 @@ function crawlSites() {
         list.push(site);
     });
     function recur() {
-        if (list) {
+        if (list.length) {
             debug('Crawling ' + list[list.length-1]);
             var site = list.pop();
             if (sites[site] && daysSince%sites[site] === 0)
                 crawl(site).when(
                     function() {
-                        debug('Done crawling ' + list[list.length-1]);
+                        debug('Done crawling ' + site);
                         recur(); 
                     });
             else recur();
