@@ -28,11 +28,12 @@
     "node": ">= 0.6.x"
   },
   "dependencies": {
+    "bb-server": "*",
     "dougs_vow": "*",
     "which": "*",
     "request": "2.21.0",
     "url_washer": "*",
-    "node-schedule": "*",
+    "xml2js": "*",
     "sitemap": "*",
     "extend": "*",
     "date-utils": "*",
@@ -43,7 +44,8 @@
     "htmlparser": "1.7.6",
     "iconv-lite": "0.2.8",
     "iconv": "2.0.6",
-    "cachejs": "*"
+    "cachejs": "*",
+    "MD5": "*"
   },
   "devDependencies": {
     "fs-extra": "0.8.x",

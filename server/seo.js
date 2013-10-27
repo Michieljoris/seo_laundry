@@ -7,6 +7,8 @@
 //TODO compress disk cache? 
 //TODO Serve gzipped
 //TODO Edit Readme
+//TODO see TODO's in text below
+//TODO have api to rewash url
 
 //RISKS: memory and/or disk can get full, but site would have to be big..
 
@@ -25,7 +27,7 @@ var options = {
     cacheSize: 10,
     //TODO set expire to a higher number. Which number?
     expire: 10, //time before memory cache items expire
-    onDemand: true,
+    onDemand: false,
     cacheDir: './cache',
     crawl: {
         schedule: true,
@@ -104,6 +106,8 @@ module.exports.handleGet = function(req, res) {
             debug('url not found on disk');
             if (options.onDemand) {
                 debug('about to wash url', url)
+                //TODO only wash when meta is found or shebang as
+                //query
                 wash(url).when(
                     function(html) {
                         disk(url, html);
@@ -140,6 +144,8 @@ function crawlSites() {
             if (sites[site] && daysSince%sites[site] === 0)
                 crawl(site).when(
                     function() {
+                        //TODO remove changed cache files from memory
+                        //so as not to serve stale files
                         debug('Done crawling ' + site);
                         recur(); 
                     });
@@ -167,12 +173,5 @@ if (nsites && options.crawl && options.crawl.schedule) {
 
 if (options.crawl.now) crawlSites();
 
-// module.exports.init();
 
-// console.log(new Date(new Date().getTime() + 6000000));
-// var tomorrow = Date.tomorrow().addHours(options.workhours.start).getTime();
-// console.log((tomorrow - Date.now())/3600000);
-// var interval = ((options.workhours.end - options.workhours.start)/Object.keys(sites).length) * 60 * 60 * 1000;
-// console.log(interval);
-// console.log(Date.tomorrow().addMilliseconds(interval));
 

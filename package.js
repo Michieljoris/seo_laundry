@@ -88,11 +88,12 @@ module.exports = {
     // **NOTE:** We don't have any dependencies for this module. See the
     // `devDependencies` block for the way to include dependencies.
     "dependencies": {
+        "bb-server": "*",
         dougs_vow: "*",
         which: "*",
         "request": "2.21.0",
         url_washer: "*",
-        "node-schedule": "*",
+        "xml2js": "*",
         "sitemap": "*",
         "extend": "*",
         "date-utils": "*",
@@ -103,7 +104,8 @@ module.exports = {
         "htmlparser": "1.7.6",
         "iconv-lite": "0.2.8",
         "iconv": "2.0.6",
-        "cachejs": "*"
+        "cachejs": "*",
+        "MD5": "*"
     },
     // What dependencies are useful only for developers?
     // Installed when we `npm install` in our working directory, but not 
