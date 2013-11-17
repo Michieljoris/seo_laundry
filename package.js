@@ -88,7 +88,7 @@ module.exports = {
     // **NOTE:** We don't have any dependencies for this module. See the
     // `devDependencies` block for the way to include dependencies.
     "dependencies": {
-        "bb-server": "*",
+        "bb-server": "0.3.*",
         dougs_vow: "*",
         which: "*",
         "request": "2.21.0",

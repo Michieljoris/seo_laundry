@@ -28,7 +28,7 @@
     "node": ">= 0.6.x"
   },
   "dependencies": {
-    "bb-server": "*",
+    "bb-server": "0.3.*",
     "dougs_vow": "*",
     "which": "*",
     "request": "2.21.0",
